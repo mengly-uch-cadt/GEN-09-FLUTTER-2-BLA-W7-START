@@ -46,7 +46,16 @@ class _RidePrefFormState extends State<RidePrefForm> {
   @override
   void initState() {
     super.initState();
+    _initializeForm();
+  }
 
+  @override
+  void didUpdateWidget(covariant RidePrefForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _initializeForm();
+  }
+
+  void _initializeForm() {
     if (widget.initialPreference != null) {
       RidePreference current = widget.initialPreference!;
       departure = current.departure;
@@ -56,7 +65,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
     } else {
       // If no given preferences, we select default ones :
       departure = null; // User shall select the departure
-      departureDate = DateTime.now(); // Now  by default
+      departureDate = DateTime.now(); // Now by default
       arrival = null; // User shall select the arrival
       requestedSeats = 1; // 1 seat book by default
     }
@@ -105,7 +114,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
     bool isValid = hasDeparture && hasArrival;
 
     if (isValid) {
-      // 2 - Create a  new preference
+      // 2 - Create a new preference
       RidePreference newPreference = RidePreference(
         departure: departure!,
         departureDate: departureDate,
@@ -113,14 +122,14 @@ class _RidePrefFormState extends State<RidePrefForm> {
         requestedSeats: requestedSeats,
       );
 
-      // 3 - Callback withg the new preference
+      // 3 - Callback with the new preference
       widget.onSubmit(newPreference);
     }
   }
 
   void onSwappingLocationPressed() {
     setState(() {
-      // We switch only if both departure and arrivate are defined
+      // We switch only if both departure and arrival are defined
       if (departure != null && arrival != null) {
         Location temp = departure!;
         departure = Location.copy(arrival!);
