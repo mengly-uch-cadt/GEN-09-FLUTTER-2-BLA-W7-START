@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../model/ride/ride_pref.dart';
 import '../../../provider/rides_preferences_provider.dart';
+import '../../../provider/async_value.dart';
 import '../../theme/theme.dart';
 import '../../../utils/animations_util.dart';
 import '../rides/rides_screen.dart';
@@ -10,7 +11,7 @@ import 'widgets/ride_pref_form.dart';
 import 'widgets/ride_pref_history_tile.dart';
 
 const String blablaHomeImagePath = 'assets/images/blabla_home.png';
-
+ 
 ///
 /// This screen allows user to:
 /// - Enter his/her ride preference and launch a search on it
@@ -22,8 +23,8 @@ class RidePrefScreen extends StatelessWidget {
   void onRidePrefSelected(BuildContext context, RidePreference newPreference) async {
     // 1 - Update the current preference
     context.read<RidesPreferencesProvider>().setCurrentPreference(newPreference);
-
-    // 2 - Navigate to the rides screen (with a bottom to top animation)
+    
+    // 2 - Navigate to the rides screen (with bottom-to-top animation)
     await Navigator.of(context).push(AnimationUtils.createBottomToTopRoute(const RidesScreen()));
   }
 
@@ -31,12 +32,12 @@ class RidePrefScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<RidesPreferencesProvider>();
     final currentRidePreference = provider.currentPreference;
-    final pastPreferences = provider.preferencesHistory;
+    final pastPreferences = provider.pastPreferences;
 
     return Stack(
       children: [
         // 1 - Background  Image
-        BlaBackground(),
+        BlaBackground(), 
 
         // 2 - Foreground content
         Column(
@@ -50,8 +51,8 @@ class RidePrefScreen extends StatelessWidget {
             Container(
               margin: EdgeInsets.symmetric(horizontal: BlaSpacings.xxl),
               decoration: BoxDecoration(
-                color: Colors.white, // White background
-                borderRadius: BorderRadius.circular(16), // Rounded corners
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -64,19 +65,24 @@ class RidePrefScreen extends StatelessWidget {
                   ),
                   SizedBox(height: BlaSpacings.m),
 
-                  // 2.2 Optionally display a list of past preferences
-                  SizedBox(
-                    height: 200, // Set a fixed height
-                    child: ListView.builder(
-                      shrinkWrap: true, // Fix ListView height issue
-                      physics: AlwaysScrollableScrollPhysics(),
-                      itemCount: pastPreferences.length,
-                      itemBuilder: (ctx, index) => RidePrefHistoryTile(
-                        ridePref: pastPreferences[index],
-                        onPressed: () => onRidePrefSelected(context, pastPreferences[index]),
+                  // 2.2 Display the list of past entered ride preferences
+                  if (pastPreferences.isLoading)
+                    Center(child: CircularProgressIndicator())
+                  else if (pastPreferences.error != null)
+                    Center(child: Text('No connection. Try later'))
+                  else
+                    SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: AlwaysScrollableScrollPhysics(),
+                        itemCount: pastPreferences.data?.length ?? 0,
+                        itemBuilder: (ctx, index) => RidePrefHistoryTile(
+                          ridePref: pastPreferences.data![index],
+                          onPressed: () => onRidePrefSelected(context, pastPreferences.data![index]),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -97,7 +103,7 @@ class BlaBackground extends StatelessWidget {
       height: 340,
       child: Image.asset(
         blablaHomeImagePath,
-        fit: BoxFit.cover, // Adjust image fit to cover the container
+        fit: BoxFit.cover,
       ),
     );
   }
